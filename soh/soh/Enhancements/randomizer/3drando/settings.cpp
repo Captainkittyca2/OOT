@@ -2055,21 +2055,24 @@ namespace Settings {
   }
 
   //Options that should be saved, set to default, then restored after finishing when vanilla logic is enabled
-  std::vector<Option *> vanillaLogicDefaults = {
-    &LinksPocketItem,
-    &ShuffleRewards,
-    &ShuffleSongs,
-    &Shopsanity,
-    &ShopsanityPrices,
-    &ShopsanityPricesAffordable,
-    &Scrubsanity,
-    &ShuffleCows,
-    &ShuffleMagicBeans,
-    &ShuffleMerchants,
-    &ShuffleFrogSongRupees,
-    &ShuffleAdultTradeQuest,
-    &Shuffle100GSReward,
-    &GossipStoneHints,
+  std::vector<std::pair<Option*, uint8_t>> vanillaLogicOverrides = {
+    { &LinksPocketItem, LINKSPOCKETITEM_DUNGEON_REWARD },
+    { &ShuffleRewards, REWARDSHUFFLE_END_OF_DUNGEON },
+    { &ShuffleSongs, SONGSHUFFLE_SONG_LOCATIONS },
+    { &Shopsanity, SHOPSANITY_OFF },
+    { &Scrubsanity, SCRUBSANITY_OFF },
+    { &ShuffleCows, OFF },
+    { &ShuffleMagicBeans, OFF },
+    { &ShuffleMerchants, SHUFFLEMERCHANTS_OFF },
+    { &ShuffleChestMinigame, SHUFFLECHESTMINIGAME_OFF },
+    { &ShuffleFrogSongRupees, SHUFFLEFROGSONGRUPEES_OFF },
+    { &ShuffleAdultTradeQuest, SHUFFLEADULTTRADEQUEST_ON },
+    { &MapsAndCompasses, MAPSANDCOMPASSES_VANILLA },
+    { &Keysanity, KEYSANITY_ANY_DUNGEON }, // Set small keys to any dungeon so FiT basement door will be locked
+    { &BossKeysanity, BOSSKEYSANITY_VANILLA },
+    { &GanonsBossKey, GANONSBOSSKEY_VANILLA },
+    { &Shuffle100GSReward, OFF },
+    { &GossipStoneHints, HINTS_NO_HINTS },
   };
 
   // Randomizes all settings in a category if chosen
@@ -2201,6 +2204,9 @@ namespace Settings {
         break;
       case RO_LOGIC_NO_LOGIC:
         Logic.SetSelectedIndex(2);
+        break;
+      case RO_LOGIC_VANILLA:
+        Logic.SetSelectedIndex(3);
         break;
     }
 
@@ -2422,6 +2428,13 @@ namespace Settings {
     // RANDOTODO implement chest shuffle with keysanity
     // ShuffleChestMinigame.SetSelectedIndex(cvarSettings[RSK_SHUFFLE_CHEST_MINIGAME]);
 
+    if (Logic.Is(LOGIC_VANILLA)) {
+      for (auto overridePair : vanillaLogicOverrides) {
+        overridePair.first->SetDelayedOption();
+        overridePair.first->SetSelectedIndex(overridePair.second);
+      }
+    }
+
     RandomizeAllSettings(true); //now select any random options instead of just hiding them
 
     //shuffle the dungeons and then set MQ for as many as necessary
@@ -2587,16 +2600,6 @@ namespace Settings {
       LACSCondition = LACSCONDITION_TOKENS;
     } else {
       LACSCondition = LACSCONDITION_VANILLA;
-    }
-
-    //If vanilla logic, we want to set all settings which unnecessarily modify vanilla behavior to off
-    if (Logic.Is(LOGIC_VANILLA)) {
-      for (Option* setting : vanillaLogicDefaults) {
-        setting->SetDelayedOption();
-        setting->SetSelectedIndex(0);
-      }
-      Keysanity.SetDelayedOption();
-      Keysanity.SetSelectedIndex(3); //Set small keys to any dungeon so FiT basement door will be locked
     }
   }
 
