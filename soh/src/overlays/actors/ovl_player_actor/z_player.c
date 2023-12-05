@@ -2438,7 +2438,6 @@ s32 func_8083442C(Player* this, PlayState* play) {
 
         if (this->unk_860 >= 0) {
             Player_PlaySfx(this, D_80854398[ABS(this->unk_860) - 1]);
-            if (Player_HoldsHookshot(this) && CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magic = MAX(0, gSaveContext.magic - 6);
 
             if (!Player_HoldsHookshot(this) && (func_80834380(play, this, &item, &arrowType) > 0)) {
                 magicArrowType = arrowType - ARROW_FIRE;
