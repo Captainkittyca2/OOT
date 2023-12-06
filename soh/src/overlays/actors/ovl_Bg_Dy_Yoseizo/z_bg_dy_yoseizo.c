@@ -749,7 +749,8 @@ void BgDyYoseizo_Give_Reward(BgDyYoseizo* this, PlayState* play) {
                     gSaveContext.isMagicAcquired = true;
                 }
                 gSaveContext.isDoubleMagicAcquired = true;
-                gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
+                if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magicFillTarget = (1.5 * MAGIC_NORMAL_METER);
+                else gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
                 gSaveContext.magicLevel = 0;
                 Interface_ChangeAlpha(9);
                 break;
