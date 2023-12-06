@@ -2429,7 +2429,8 @@ u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
             gSaveContext.isMagicAcquired = true;
         }
         gSaveContext.isDoubleMagicAcquired = true;
-        gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
+        if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magicFillTarget = (1.5 * MAGIC_NORMAL_METER);
+        else gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
         gSaveContext.magicLevel = 0;
         Magic_Fill(play);
         return Return_Item_Entry(giEntry, RG_NONE);
@@ -3242,6 +3243,7 @@ void Magic_Fill(PlayState* play) {
     if (gSaveContext.isMagicAcquired) {
         gSaveContext.prevMagicState = gSaveContext.magicState;
         gSaveContext.magicFillTarget = (gSaveContext.isDoubleMagicAcquired + 1) * MAGIC_NORMAL_METER;
+        if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) gSaveContext.magicFillTarget = 1.5 * 0x30;
         gSaveContext.magicState = MAGIC_STATE_FILL;
     }
 }
@@ -3381,6 +3383,7 @@ void Interface_UpdateMagicBar(PlayState* play) {
     switch (gSaveContext.magicState) {
         case MAGIC_STATE_STEP_CAPACITY:
             temp = gSaveContext.magicLevel * MAGIC_NORMAL_METER;
+            if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) temp = 1.5 * MAGIC_NORMAL_METER;
             if (gSaveContext.magicCapacity != temp) {
                 if (gSaveContext.magicCapacity < temp) {
                     gSaveContext.magicCapacity += 8;
