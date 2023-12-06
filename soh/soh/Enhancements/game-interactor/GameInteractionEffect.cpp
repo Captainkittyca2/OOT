@@ -125,7 +125,8 @@ namespace GameInteractionEffect {
         }
     }
     void FillMagic::_Apply() {
-        GameInteractor::RawAction::AddOrRemoveMagic(96);
+        if (CVarGetInteger("gMagicAmmo", 0)) GameInteractor::RawAction::AddOrRemoveMagic(72);
+        else GameInteractor::RawAction::AddOrRemoveMagic(96);
     }
 
     // MARK: - EmptyMagic
@@ -139,7 +140,8 @@ namespace GameInteractionEffect {
         }
     }
     void EmptyMagic::_Apply() {
-        GameInteractor::RawAction::AddOrRemoveMagic(-96);
+        if (CVarGetInteger("gMagicAmmo", 0)) GameInteractor::RawAction::AddOrRemoveMagic(-72);
+        else GameInteractor::RawAction::AddOrRemoveMagic(-96);
     }
 
     // MARK: - ModifyRupees
