@@ -111,7 +111,8 @@ void RegisterInfiniteMagic() {
         if (!GameInteractor::IsSaveLoaded()) return;
         if (CVarGetInteger("gInfiniteMagic", 0) != 0) {
             if (gSaveContext.isMagicAcquired && gSaveContext.magic != (gSaveContext.isDoubleMagicAcquired + 1) * 0x30) {
-                gSaveContext.magic = (gSaveContext.isDoubleMagicAcquired + 1) * 0x30;
+                if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) gSaveContext.magic = 1.5*0x30;
+                else gSaveContext.magic = (gSaveContext.isDoubleMagicAcquired + 1) * 0x30;
             }
         }
     });
