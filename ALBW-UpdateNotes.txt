@@ -1,0 +1,17 @@
+## version 0.7:
+  Adjustments:
+    * Meter now can go below zero and into negative numbers. Because of this, most of the items can be used as long as meter isn't below zero.
+  New:
+    * Dropped bombs. bombchus, arrow levels 1, 2, and 3, and Deku seeds, nuts, and sticks are converted to meter jars.
+    * Before unlocking first meter upgrade, you'll have a custom meter which is half the amount of the first meter.
+
+## version 0.6:
+  New:
+    * Lens of truth consumes the meter faster.
+    * The preview consumption color has been changed from yellow to green.
+    * The game mode now supports custom meter colors from the cosmetic editor.
+  Bug-fixes:
+    * After loading your file, the meter will be adjusted appropriately when you enable/disable the game mode.
+    * If you haven't unlocked the meter yet and have the game mode enabled, try disabling and enabling and should then unlock it.
+    * If you load your file and the ammo in the meter exceeds the bar itself, enable/disable the game mode and it should be fixed.
+
