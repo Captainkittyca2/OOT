@@ -884,10 +884,12 @@ void EnItem00_Update(Actor* thisx, PlayState* play) {
             Item_Give(play, ITEM_RUPEE_GOLD);
             break;
         case ITEM00_STICK:
-            getItemId = GI_STICKS_1;
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_SMALL;
+            else getItemId = GI_STICKS_1;
             break;
         case ITEM00_NUTS:
-            getItemId = GI_NUTS_5;
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_SMALL;
+            else getItemId = GI_NUTS_5;
             break;
         case ITEM00_HEART:
             Item_Give(play, ITEM_HEART);
@@ -897,22 +899,27 @@ void EnItem00_Update(Actor* thisx, PlayState* play) {
             break;
         case ITEM00_BOMBS_A:
         case ITEM00_BOMBS_B:
-            Item_Give(play, ITEM_BOMBS_5);
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_LARGE;
+            else Item_Give(play, ITEM_BOMBS_5);
             break;
         case ITEM00_ARROWS_SINGLE:
             Item_Give(play, ITEM_BOW);
             break;
         case ITEM00_ARROWS_SMALL:
-            Item_Give(play, ITEM_ARROWS_SMALL);
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_SMALL;
+            else Item_Give(play, ITEM_ARROWS_SMALL);
             break;
         case ITEM00_ARROWS_MEDIUM:
-            Item_Give(play, ITEM_ARROWS_MEDIUM);
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_SMALL;
+            else Item_Give(play, ITEM_ARROWS_MEDIUM);
             break;
         case ITEM00_ARROWS_LARGE:
-            Item_Give(play, ITEM_ARROWS_LARGE);
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_LARGE;
+            else Item_Give(play, ITEM_ARROWS_LARGE);
             break;
         case ITEM00_SEEDS:
-            getItemId = GI_SEEDS_5;
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_SMALL;
+            else getItemId = GI_SEEDS_5;
             break;
         case ITEM00_SMALL_KEY:
             getItemId = GI_KEY_SMALL;
@@ -944,7 +951,8 @@ void EnItem00_Update(Actor* thisx, PlayState* play) {
         case ITEM00_BOMBS_SPECIAL:
             break;
         case ITEM00_BOMBCHU:
-            Item_Give(play, ITEM_BOMBCHUS_5);
+            if (CVarGetInteger("gMagicAmmo", 0)) getItemId = GI_MAGIC_LARGE;
+            else Item_Give(play, ITEM_BOMBCHUS_5);
             break;
     }
 
@@ -1085,46 +1093,88 @@ void EnItem00_Draw(Actor* thisx, PlayState* play) {
             case ITEM00_BOMBS_A:
             case ITEM00_BOMBS_B:
             case ITEM00_BOMBS_SPECIAL:
+                if (CVarGetInteger("gMagicAmmo", 0)) {sItemDropTex[1] = gDropMagicLargeTex; sItemDropTex[5] = gDropMagicLargeTex;} else {sItemDropTex[1] = gDropBombTex; sItemDropTex[5] = gDropBombTex;}
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 8.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_BOMB);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_LARGE);
+                    } else {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_BOMB);
+                    }
                     break;
                 }
             case ITEM00_ARROWS_SINGLE:
             case ITEM00_ARROWS_SMALL:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[2] = gDropMagicSmallTex; else sItemDropTex[2] = gDropArrows1Tex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 7.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_ARROWS_SMALL);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_SMALL);
+                    } else {
+                        mtxScale = 7.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_ARROWS_SMALL);
+                    }
                     break;
                 }
             case ITEM00_ARROWS_MEDIUM:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[3] = gDropMagicSmallTex; else sItemDropTex[3] = gDropArrows2Tex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 7.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_ARROWS_MEDIUM);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_SMALL);
+                    } else {
+                        mtxScale = 7.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_ARROWS_MEDIUM);
+                    }
                     break;
                 }
             case ITEM00_ARROWS_LARGE:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[4] = gDropMagicLargeTex; else sItemDropTex[4] = gDropArrows3Tex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 7.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_ARROWS_LARGE);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_LARGE);
+                    } else {
+                        mtxScale = 7.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_ARROWS_LARGE);
+                    }
                     break;
                 }
             case ITEM00_NUTS:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[6] = gDropMagicSmallTex; else sItemDropTex[6] = gDropDekuNutTex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 9.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_NUTS);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_SMALL);
+                    } else {
+                        mtxScale = 9.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_NUTS);
+                    }
                     break;
                 }
             case ITEM00_STICK:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[7] = gDropMagicSmallTex; else sItemDropTex[7] = gDropDekuStickTex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 7.5f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_STICK);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_SMALL);
+                    } else {
+                        mtxScale = 7.5f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_STICK);
+                    }
                     break;
                 }
             case ITEM00_MAGIC_LARGE:
@@ -1142,17 +1192,31 @@ void EnItem00_Draw(Actor* thisx, PlayState* play) {
                     break;
                 }
             case ITEM00_SEEDS:
+                if (CVarGetInteger("gMagicAmmo", 0)) sItemDropTex[10] = gDropMagicSmallTex; else sItemDropTex[10] = gDropDekuSeedsTex;
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 7.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_SEEDS);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_SMALL);
+                    } else {
+                        mtxScale = 7.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_SEEDS);
+                    }
                     break;
                 }
             case ITEM00_BOMBCHU:
+                if (CVarGetInteger("gMagicAmmo", 0)) {sItemDropTex[1] = gDropMagicLargeTex; sItemDropTex[5] = gDropMagicLargeTex;} else {sItemDropTex[1] = gDropBombTex; sItemDropTex[5] = gDropBombTex;}
                 if (CVarGetInteger("gNewDrops", 0)) {
-                    mtxScale = 9.0f;
-                    Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
-                    GetItem_Draw(play, GID_BOMBCHU);
+                    if (CVarGetInteger("gMagicAmmo", 0)) {
+                        mtxScale = 8.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_MAGIC_LARGE);
+                    } else {
+                        mtxScale = 9.0f;
+                        Matrix_Scale(mtxScale, mtxScale, mtxScale, MTXMODE_APPLY);
+                        GetItem_Draw(play, GID_BOMBCHU);
+                    }
                     break;
                 }
             case ITEM00_SMALL_KEY:
