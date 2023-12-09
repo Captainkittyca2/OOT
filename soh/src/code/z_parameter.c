@@ -993,7 +993,7 @@ void func_80083108(PlayState* play) {
                             }
 
                             gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] = BTN_ENABLED;
-                            if (gSaveContext.magic < MAX(0, 6) && CVarGetInteger("gMagicAmmo", 0)) {
+                               if ((gSaveContext.magic < 1) && CVarGetInteger("gMagicAmmo", 0)) {
                                 for (i = 1; i < ARRAY_COUNT(gSaveContext.equips.buttonItems); i++) {
                                     if (gSaveContext.equips.buttonItems[i] == ITEM_HOOKSHOT || gSaveContext.equips.buttonItems[i] == ITEM_LONGSHOT) {
                                         if (gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] == BTN_ENABLED) {
@@ -1350,7 +1350,7 @@ void func_80083108(PlayState* play) {
                         }
                     }
                 }
-                if (gSaveContext.magic < MAX(0, 6) && CVarGetInteger("gMagicAmmo", 0)) {
+                if ((gSaveContext.magic < 1) && CVarGetInteger("gMagicAmmo", 0)) {
                     for (i = 1; i < ARRAY_COUNT(gSaveContext.equips.buttonItems); i++) {
                         if (gSaveContext.equips.buttonItems[i] == ITEM_BOOMERANG || gSaveContext.equips.buttonItems[i] == ITEM_HOOKSHOT || gSaveContext.equips.buttonItems[i] == ITEM_LONGSHOT) {
                             if (gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] == BTN_ENABLED) {
@@ -3240,10 +3240,12 @@ void Inventory_ChangeAmmo(s16 item, s16 ammoChange) {
 }
 
 void Magic_Fill(PlayState* play) {
-    if (gSaveContext.isMagicAcquired) {
+    if (gSaveContext.isMagicAcquired || CVarGetInteger("gMagicAmmo", 0)) {
         gSaveContext.prevMagicState = gSaveContext.magicState;
-        gSaveContext.magicFillTarget = (gSaveContext.isDoubleMagicAcquired + 1) * MAGIC_NORMAL_METER;
-        if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) gSaveContext.magicFillTarget = 1.5 * 0x30;
+        if (CVarGetInteger("gMagicAmmo", 0)){
+            if (gSaveContext.magicLevel == 0) gSaveContext.magicFillTarget = 24;
+            else if (gSaveContext.magicLevel == 2) gSaveContext.magicFillTarget = 72;
+        } else gSaveContext.magicFillTarget = (gSaveContext.isDoubleMagicAcquired + 1) * MAGIC_NORMAL_METER;
         gSaveContext.magicState = MAGIC_STATE_FILL;
     }
 }
@@ -3258,7 +3260,7 @@ void Magic_Reset(PlayState* play) {
 }
 
 s32 Magic_RequestChange(PlayState* play, s16 amount, s16 type) {
-    if (!gSaveContext.isMagicAcquired) {
+    if (!gSaveContext.isMagicAcquired && !CVarGetInteger("gMagicAmmo", 0)) {
         return false;
     }
 
@@ -3382,8 +3384,10 @@ void Interface_UpdateMagicBar(PlayState* play) {
 
     switch (gSaveContext.magicState) {
         case MAGIC_STATE_STEP_CAPACITY:
-            temp = gSaveContext.magicLevel * MAGIC_NORMAL_METER;
-            if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) temp = 1.5 * MAGIC_NORMAL_METER;
+            if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel != 1) {
+                if (gSaveContext.magicLevel == 0) temp = 24;
+                else if (gSaveContext.magicLevel == 2) temp = 72;
+            } else temp = gSaveContext.magicLevel * MAGIC_NORMAL_METER;
             if (gSaveContext.magicCapacity != temp) {
                 if (gSaveContext.magicCapacity < temp) {
                     gSaveContext.magicCapacity += 8;
@@ -3619,7 +3623,7 @@ void Interface_DrawMagicBar(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx);
 
-    if (gSaveContext.magicLevel != 0) {
+    if (gSaveContext.magicLevel != 0 || CVarGetInteger("gMagicAmmo", 0)) {
         s16 X_Margins;
         s16 Y_Margins;
         if (CVarGetInteger("gMagicBarUseMargins", 0) != 0) {
