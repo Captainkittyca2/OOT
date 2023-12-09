@@ -1173,13 +1173,18 @@ void DrawEnhancementsMenu() {
 
             if (UIWidgets::PaddedEnhancementCheckbox("ALBW-Style Meter", "gMagicAmmo", true, false)){
                 if (CVarGetInteger("gMagicAmmo", 0)){
-                    if (gSaveContext.magicLevel == 0 || gSaveContext.magicLevel == 1){
-                        gSaveContext.magic = 48; gSaveContext.magicCapacity = 48; gSaveContext.magicLevel = 1;
+                    if (gSaveContext.magicLevel == 0){
+                        gSaveContext.magic = 24; gSaveContext.magicCapacity = 24;
+                    } else if (gSaveContext.magicLevel == 1){
+                        gSaveContext.magic = 48; gSaveContext.magicCapacity = 48;
                     } else{
                         gSaveContext.magic = 72; gSaveContext.magicCapacity = 72;
                     }
                 } else {
-                    if (gSaveContext.magicLevel == 2){
+                    if (gSaveContext.magicLevel == 0){
+                        gSaveContext.magic = 0; gSaveContext.magicCapacity = 0;
+                    }
+                    else if (gSaveContext.magicLevel == 2){
                         gSaveContext.magic = 96; gSaveContext.magicCapacity = 96;
                     }
                 }
