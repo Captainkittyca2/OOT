@@ -120,6 +120,8 @@ namespace GameInteractionEffect {
             return GameInteractionEffectQueryResult::TemporarilyNotPossible;
         } else if (!gSaveContext.isMagicAcquired || gSaveContext.magic >= ((gSaveContext.isDoubleMagicAcquired + 1) * 48)) {
             return GameInteractionEffectQueryResult::NotPossible;
+        } else if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magic >= (72)) {
+            return GameInteractionEffectQueryResult::NotPossible;
         } else {
             return GameInteractionEffectQueryResult::Possible;
         }
