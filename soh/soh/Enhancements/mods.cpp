@@ -38,6 +38,7 @@ uint32_t ResourceMgr_IsSceneMasterQuest(s16 sceneNum);
 bool meterr;
 int timerrr;
 int itemusagge;
+int timerrrlimit = 0;
 // TODO: When there's more uses of something like this, create a new GI::RawAction?
 void ReloadSceneTogglingLinkAge() {
     gPlayState->nextEntranceIndex = gSaveContext.entranceIndex;
@@ -1080,11 +1081,14 @@ void RegisterMagicAmmo() {
             static u8 framesSinceLastMagicIncrease = 0;
             framesSinceLastMagicIncrease++;
 
-            if (temp_ammo != gSaveContext.magic){meterr = true; timerrr = 0; temp_ammo = gSaveContext.magic;}
+            if (temp_ammo != gSaveContext.magic)
+                {if (gSaveContext.magic < 0) {timerrrlimit = gSaveContext.magic*10; gSaveContext.magic = 0;}
+                meterr = true; timerrr = 0; temp_ammo = gSaveContext.magic;}
             if (meterr == true){
                 timerrr++;
-                if (timerrr == 30){
+                if (timerrr == 30 + abs(timerrrlimit)){
                     timerrr = 0;
+                    timerrrlimit = 0;
                     meterr = false;
                 }
             }
@@ -1094,16 +1098,20 @@ void RegisterMagicAmmo() {
                 if (gSaveContext.magic < gSaveContext.magicCapacity) {
                     gSaveContext.magic++;
                     temp_ammo++;
+                } else if (gSaveContext.magic > gSaveContext.magicCapacity){
+                    gSaveContext.magic = temp_ammo = gSaveContext.magicCapacity;
                 }
             }
 
             float newAmmoAmount = (10*gSaveContext.magicCapacity/48) * (static_cast<float>(gSaveContext.magic) / gSaveContext.magicCapacity);
-            AMMO(ITEM_STICK) = newAmmoAmount/5;
-            AMMO(ITEM_SLINGSHOT) = newAmmoAmount/2.5;
-            AMMO(ITEM_NUT) = newAmmoAmount/5;
-            AMMO(ITEM_BOMB) = newAmmoAmount/3.3;
-            AMMO(ITEM_BOW) = newAmmoAmount/2.5;
-            AMMO(ITEM_BOMBCHU) = newAmmoAmount/3.3;
+            if (timerrrlimit == 0 || gSaveContext.magic > 0) {
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_STICK) = 1; else AMMO(ITEM_STICK) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/2.5) == 0) AMMO(ITEM_SLINGSHOT) = 1; else AMMO(ITEM_SLINGSHOT) = newAmmoAmount/2.5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_NUT) = 1; else AMMO(ITEM_NUT) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_BOMB) = 1; else AMMO(ITEM_BOMB) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/2.5) == 0) AMMO(ITEM_BOW) = 1; else AMMO(ITEM_BOW) = newAmmoAmount/2.5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_BOMBCHU) = 1; else AMMO(ITEM_BOMBCHU) = newAmmoAmount/5+1;
+            } else AMMO(ITEM_STICK) = AMMO(ITEM_SLINGSHOT) = AMMO(ITEM_NUT) = AMMO(ITEM_BOMB) = AMMO(ITEM_BOW) = AMMO(ITEM_BOMBCHU) = 0;
         }
     });
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnChangeAmmo>([](int16_t item, int16_t ammoChange) {
@@ -1112,8 +1120,8 @@ void RegisterMagicAmmo() {
             if (item == ITEM_STICK || item == ITEM_NUT || item == ITEM_SLINGSHOT || item == ITEM_BOW || item == ITEM_BOMB || item == ITEM_BOMBCHU) {
                 if (item == ITEM_NUT || ITEM_STICK) itemusagge = 24;
                 else if (item == ITEM_SLINGSHOT || item == ITEM_BOW) itemusagge = 12;
-                else if (item == ITEM_BOMB || item == ITEM_BOMBCHU) itemusagge = 16;
-                gSaveContext.magic = MAX(0, gSaveContext.magic - itemusagge); // 10 can be any amount based on ammo type or whatever
+                else if (item == ITEM_BOMB || item == ITEM_BOMBCHU) itemusagge = 24;
+                gSaveContext.magic = gSaveContext.magic - itemusagge; // 10 can be any amount based on ammo type or whatever
             }
         }
     });
