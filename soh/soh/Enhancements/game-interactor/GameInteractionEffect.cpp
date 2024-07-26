@@ -120,12 +120,15 @@ namespace GameInteractionEffect {
             return GameInteractionEffectQueryResult::TemporarilyNotPossible;
         } else if (!gSaveContext.isMagicAcquired || gSaveContext.magic >= ((gSaveContext.isDoubleMagicAcquired + 1) * 48)) {
             return GameInteractionEffectQueryResult::NotPossible;
+        } else if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magic >= (72)) {
+            return GameInteractionEffectQueryResult::NotPossible;
         } else {
             return GameInteractionEffectQueryResult::Possible;
         }
     }
     void FillMagic::_Apply() {
-        GameInteractor::RawAction::AddOrRemoveMagic(96);
+        if (CVarGetInteger("gMagicAmmo", 0)) GameInteractor::RawAction::AddOrRemoveMagic(72);
+        else GameInteractor::RawAction::AddOrRemoveMagic(96);
     }
 
     // MARK: - EmptyMagic
@@ -139,7 +142,8 @@ namespace GameInteractionEffect {
         }
     }
     void EmptyMagic::_Apply() {
-        GameInteractor::RawAction::AddOrRemoveMagic(-96);
+        if (CVarGetInteger("gMagicAmmo", 0)) GameInteractor::RawAction::AddOrRemoveMagic(-72);
+        else GameInteractor::RawAction::AddOrRemoveMagic(-96);
     }
 
     // MARK: - ModifyRupees

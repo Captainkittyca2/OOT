@@ -1171,6 +1171,26 @@ void DrawEnhancementsMenu() {
             UIWidgets::PaddedEnhancementCheckbox("Shadow Tag Mode", "gShadowTag", true, false);
             UIWidgets::Tooltip("A wallmaster follows Link everywhere, don't get caught!");
 
+            if (UIWidgets::PaddedEnhancementCheckbox("ALBW-Style Meter", "gMagicAmmo", true, false)){
+                if (CVarGetInteger("gMagicAmmo", 0)){
+                    if (gSaveContext.magicLevel == 0){
+                        gSaveContext.magic = 24; gSaveContext.magicCapacity = 24;
+                    } else if (gSaveContext.magicLevel == 1){
+                        gSaveContext.magic = 48; gSaveContext.magicCapacity = 48;
+                    } else{
+                        gSaveContext.magic = 72; gSaveContext.magicCapacity = 72;
+                    }
+                } else {
+                    if (gSaveContext.magicLevel == 0){
+                        gSaveContext.magic = 0; gSaveContext.magicCapacity = 0;
+                    }
+                    else if (gSaveContext.magicLevel == 2){
+                        gSaveContext.magic = 96; gSaveContext.magicCapacity = 96;
+                    }
+                }
+            }
+            UIWidgets::Tooltip("Meter increases over time, items are vulnerable, empty, or unusable when meter is empty.");
+
             UIWidgets::Spacer(0);
 
             UIWidgets::PaddedEnhancementCheckbox("Additional Traps", "gAddTraps.enabled", true, false);

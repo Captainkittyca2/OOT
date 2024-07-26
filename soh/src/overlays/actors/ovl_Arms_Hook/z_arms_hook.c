@@ -171,7 +171,7 @@ void ArmsHook_Shoot(ArmsHook* this, PlayState* play) {
 
     if ((this->timer != 0) && (this->collider.base.atFlags & AT_HIT) &&
         (this->collider.info.atHitInfo->elemType != ELEMTYPE_UNK4)) {
-        touchedActor = this->collider.base.at;
+        touchedActor = this->collider.base.at; if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magic = gSaveContext.magic - 6;
         if ((touchedActor->update != NULL) && (touchedActor->flags & (ACTOR_FLAG_HOOKSHOT_DRAGS | ACTOR_FLAG_DRAGGED_BY_HOOKSHOT))) {
             if (this->collider.info.atHitInfo->bumperFlags & BUMP_HOOKABLE) {
                 ArmsHook_AttachHookToActor(this, touchedActor);
@@ -285,8 +285,10 @@ void ArmsHook_Shoot(ArmsHook* this, PlayState* play) {
                 Audio_PlaySoundGeneral(NA_SE_IT_HOOKSHOT_REFLECT, &this->actor.projectedPos, 4, &D_801333E0,
                                        &D_801333E0, &D_801333E8);
             }
+            if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magic = gSaveContext.magic - 6;
         } else if (CHECK_BTN_ANY(play->state.input[0].press.button, (buttonsToCheck))) {
             this->timer = 0;
+            if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magic = gSaveContext.magic - 6;
         }
     }
 }

@@ -35,7 +35,10 @@ extern PlayState* gPlayState;
 extern void Overlay_DisplayText(float duration, const char* text);
 uint32_t ResourceMgr_IsSceneMasterQuest(s16 sceneNum);
 }
-
+bool meterr;
+int timerrr;
+int itemusagge;
+int timerrrlimit = 0;
 // TODO: When there's more uses of something like this, create a new GI::RawAction?
 void ReloadSceneTogglingLinkAge() {
     gPlayState->nextEntranceIndex = gSaveContext.entranceIndex;
@@ -109,7 +112,8 @@ void RegisterInfiniteMagic() {
         if (!GameInteractor::IsSaveLoaded()) return;
         if (CVarGetInteger("gInfiniteMagic", 0) != 0) {
             if (gSaveContext.isMagicAcquired && gSaveContext.magic != (gSaveContext.isDoubleMagicAcquired + 1) * 0x30) {
-                gSaveContext.magic = (gSaveContext.isDoubleMagicAcquired + 1) * 0x30;
+                if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel == 2) gSaveContext.magic = 1.5*0x30;
+                else gSaveContext.magic = (gSaveContext.isDoubleMagicAcquired + 1) * 0x30;
             }
         }
     });
@@ -1070,6 +1074,59 @@ void RegisterRandomizedEnemySizes() {
     });
 }
 
+void RegisterMagicAmmo() {
+    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnPlayerUpdate>([]() {
+        if (CVarGetInteger("gMagicAmmo", 0)) {
+            static int temp_ammo = gSaveContext.magic;
+            static u8 framesSinceLastMagicIncrease = 0;
+            framesSinceLastMagicIncrease++;
+
+            if (temp_ammo != gSaveContext.magic)
+                {if (gSaveContext.magic < 0) {timerrrlimit = gSaveContext.magic*10; gSaveContext.magic = 0;}
+                meterr = true; timerrr = 0; temp_ammo = gSaveContext.magic;}
+            if (meterr == true){
+                timerrr++;
+                if (timerrr == 30 + abs(timerrrlimit)){
+                    timerrr = 0;
+                    timerrrlimit = 0;
+                    meterr = false;
+                }
+            }
+
+            if (framesSinceLastMagicIncrease > 10 && meterr == false) {
+                framesSinceLastMagicIncrease = 0;
+                if (gSaveContext.magic < gSaveContext.magicCapacity) {
+                    gSaveContext.magic++;
+                    temp_ammo++;
+                } else if (gSaveContext.magic > gSaveContext.magicCapacity){
+                    gSaveContext.magic = temp_ammo = gSaveContext.magicCapacity;
+                }
+            }
+
+            float newAmmoAmount = (10*gSaveContext.magicCapacity/48) * (static_cast<float>(gSaveContext.magic) / gSaveContext.magicCapacity);
+            if (timerrrlimit == 0 || gSaveContext.magic > 0) {
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_STICK) = 1; else AMMO(ITEM_STICK) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/2.5) == 0) AMMO(ITEM_SLINGSHOT) = 1; else AMMO(ITEM_SLINGSHOT) = newAmmoAmount/2.5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_NUT) = 1; else AMMO(ITEM_NUT) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_BOMB) = 1; else AMMO(ITEM_BOMB) = newAmmoAmount/5+1;
+                if (floor(newAmmoAmount/2.5) == 0) AMMO(ITEM_BOW) = 1; else AMMO(ITEM_BOW) = newAmmoAmount/2.5+1;
+                if (floor(newAmmoAmount/5) == 0) AMMO(ITEM_BOMBCHU) = 1; else AMMO(ITEM_BOMBCHU) = newAmmoAmount/5+1;
+            } else AMMO(ITEM_STICK) = AMMO(ITEM_SLINGSHOT) = AMMO(ITEM_NUT) = AMMO(ITEM_BOMB) = AMMO(ITEM_BOW) = AMMO(ITEM_BOMBCHU) = 0;
+        }
+    });
+    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnChangeAmmo>([](int16_t item, int16_t ammoChange) {
+        if (CVarGetInteger("gMagicAmmo", 0)) {
+        
+            if (item == ITEM_STICK || item == ITEM_NUT || item == ITEM_SLINGSHOT || item == ITEM_BOW || item == ITEM_BOMB || item == ITEM_BOMBCHU) {
+                if (item == ITEM_NUT || ITEM_STICK) itemusagge = 24;
+                else if (item == ITEM_SLINGSHOT || item == ITEM_BOW) itemusagge = 12;
+                else if (item == ITEM_BOMB || item == ITEM_BOMBCHU) itemusagge = 24;
+                gSaveContext.magic = gSaveContext.magic - itemusagge; // 10 can be any amount based on ammo type or whatever
+            }
+        }
+    });
+}
+
 void InitMods() {
     RegisterTTS();
     RegisterInfiniteMoney();
@@ -1099,5 +1156,6 @@ void InitMods() {
     RegisterAltTrapTypes();
     RegisterRandomizerSheikSpawn();
     RegisterRandomizedEnemySizes();
+    RegisterMagicAmmo();
     NameTag_RegisterHooks();
 }

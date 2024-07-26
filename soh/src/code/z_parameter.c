@@ -993,6 +993,18 @@ void func_80083108(PlayState* play) {
                             }
 
                             gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] = BTN_ENABLED;
+                               if ((gSaveContext.magic < 1) && CVarGetInteger("gMagicAmmo", 0)) {
+                                for (i = 1; i < ARRAY_COUNT(gSaveContext.equips.buttonItems); i++) {
+                                    if (gSaveContext.equips.buttonItems[i] == ITEM_HOOKSHOT || gSaveContext.equips.buttonItems[i] == ITEM_LONGSHOT) {
+                                        if (gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] == BTN_ENABLED) {
+                                            sp28 = 1;
+                                        }
+
+                                        gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] = BTN_DISABLED;
+                                        
+                                    }
+                                }
+                            }
                         }
                     } else {
                         if (gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] == BTN_ENABLED) {
@@ -1335,6 +1347,18 @@ void func_80083108(PlayState* play) {
                             }
 
                             gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] = BTN_ENABLED;
+                        }
+                    }
+                }
+                if ((gSaveContext.magic < 1) && CVarGetInteger("gMagicAmmo", 0)) {
+                    for (i = 1; i < ARRAY_COUNT(gSaveContext.equips.buttonItems); i++) {
+                        if (gSaveContext.equips.buttonItems[i] == ITEM_BOOMERANG || gSaveContext.equips.buttonItems[i] == ITEM_HOOKSHOT || gSaveContext.equips.buttonItems[i] == ITEM_LONGSHOT) {
+                            if (gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] == BTN_ENABLED) {
+                                sp28 = 1;
+                            }
+
+                            gSaveContext.buttonStatus[BUTTON_STATUS_INDEX(i)] = BTN_DISABLED;
+                            
                         }
                     }
                 }
@@ -2405,7 +2429,8 @@ u16 Randomizer_Item_Give(PlayState* play, GetItemEntry giEntry) {
             gSaveContext.isMagicAcquired = true;
         }
         gSaveContext.isDoubleMagicAcquired = true;
-        gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
+        if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magicFillTarget = (1.5 * MAGIC_NORMAL_METER);
+        else gSaveContext.magicFillTarget = MAGIC_DOUBLE_METER;
         gSaveContext.magicLevel = 0;
         Magic_Fill(play);
         return Return_Item_Entry(giEntry, RG_NONE);
@@ -3151,6 +3176,7 @@ void GameplayStats_UpdateAmmoUsed(s16 item, s16 ammoUsed) {
 }
 
 void Inventory_ChangeAmmo(s16 item, s16 ammoChange) {
+    GameInteractor_ExecuteOnChangeAmmoHooks(item, ammoChange);
     // "Item = (%d)    Amount = (%d + %d)"
     osSyncPrintf("アイテム = (%d)    数 = (%d + %d)  ", item, AMMO(item), ammoChange);
 
@@ -3214,9 +3240,12 @@ void Inventory_ChangeAmmo(s16 item, s16 ammoChange) {
 }
 
 void Magic_Fill(PlayState* play) {
-    if (gSaveContext.isMagicAcquired) {
+    if (gSaveContext.isMagicAcquired || CVarGetInteger("gMagicAmmo", 0)) {
         gSaveContext.prevMagicState = gSaveContext.magicState;
-        gSaveContext.magicFillTarget = (gSaveContext.isDoubleMagicAcquired + 1) * MAGIC_NORMAL_METER;
+        if (CVarGetInteger("gMagicAmmo", 0)){
+            if (gSaveContext.magicLevel == 0) gSaveContext.magicFillTarget = 24;
+            else if (gSaveContext.magicLevel == 2) gSaveContext.magicFillTarget = 72;
+        } else gSaveContext.magicFillTarget = (gSaveContext.isDoubleMagicAcquired + 1) * MAGIC_NORMAL_METER;
         gSaveContext.magicState = MAGIC_STATE_FILL;
     }
 }
@@ -3231,7 +3260,7 @@ void Magic_Reset(PlayState* play) {
 }
 
 s32 Magic_RequestChange(PlayState* play, s16 amount, s16 type) {
-    if (!gSaveContext.isMagicAcquired) {
+    if (!gSaveContext.isMagicAcquired && !CVarGetInteger("gMagicAmmo", 0)) {
         return false;
     }
 
@@ -3355,7 +3384,10 @@ void Interface_UpdateMagicBar(PlayState* play) {
 
     switch (gSaveContext.magicState) {
         case MAGIC_STATE_STEP_CAPACITY:
-            temp = gSaveContext.magicLevel * MAGIC_NORMAL_METER;
+            if (CVarGetInteger("gMagicAmmo", 0) && gSaveContext.magicLevel != 1) {
+                if (gSaveContext.magicLevel == 0) temp = 24;
+                else if (gSaveContext.magicLevel == 2) temp = 72;
+            } else temp = gSaveContext.magicLevel * MAGIC_NORMAL_METER;
             if (gSaveContext.magicCapacity != temp) {
                 if (gSaveContext.magicCapacity < temp) {
                     gSaveContext.magicCapacity += 8;
@@ -3487,7 +3519,8 @@ void Interface_UpdateMagicBar(PlayState* play) {
                     break;
                 }
 
-                interfaceCtx->unk_230--;
+                if (CVarGetInteger("gMagicAmmo", 0)) interfaceCtx->unk_230 -= 10;
+                else interfaceCtx->unk_230--;
                 if (interfaceCtx->unk_230 == 0) {
                     gSaveContext.magic--;
                     interfaceCtx->unk_230 = 80;
@@ -3574,7 +3607,13 @@ void Interface_DrawMagicBar(PlayState* play) {
     s16 magicBarY;
     Color_RGB8 magicbar_yellow = {250,250,0}; //Magic bar being used
     Color_RGB8 magicbar_green = {R_MAGIC_FILL_COLOR(0),R_MAGIC_FILL_COLOR(1),R_MAGIC_FILL_COLOR(2)}; //Magic bar fill
+    Color_RGB8 ALBWMeter = {203, 82, 255};
+    Color_RGB8 ALBWMeter2 = {41, 130, 37};
 
+    if (CVarGetInteger("gMagicAmmo", 0)) {
+        magicbar_green = ALBWMeter;
+        magicbar_yellow = ALBWMeter2;
+    }
     if (CVarGetInteger("gCosmetics.Consumable_MagicActive.Changed", 0)) {
         magicbar_yellow = CVarGetColor24("gCosmetics.Consumable_MagicActive.Value", magicbar_yellow);
     }
@@ -3584,7 +3623,7 @@ void Interface_DrawMagicBar(PlayState* play) {
 
     OPEN_DISPS(play->state.gfxCtx);
 
-    if (gSaveContext.magicLevel != 0) {
+    if (gSaveContext.magicLevel != 0 || CVarGetInteger("gMagicAmmo", 0)) {
         s16 X_Margins;
         s16 Y_Margins;
         if (CVarGetInteger("gMagicBarUseMargins", 0) != 0) {

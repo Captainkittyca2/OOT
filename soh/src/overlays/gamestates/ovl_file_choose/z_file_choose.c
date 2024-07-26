@@ -3007,6 +3007,7 @@ void FileChoose_LoadGame(GameState* thisx) {
 
     gSaveContext.unk_13E7 = gSaveContext.unk_13E8 = gSaveContext.unk_13EA = gSaveContext.unk_13EC =
         gSaveContext.magicCapacity = 0;
+    if (CVarGetInteger("gMagicAmmo", 0)) gSaveContext.magicCapacity = 24;
 
     gSaveContext.magicFillTarget = gSaveContext.magic;
     gSaveContext.magic = 0;
