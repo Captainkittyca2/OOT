@@ -30,6 +30,9 @@
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "soh/Enhancements/randomizer/randomizer_grotto.h"
 #include "soh/frame_interpolation.h"
+#ifdef ENABLE_REMOTE_CONTROL
+#include "soh/Enhancements/game-interactor/GameInteractor_Anchor.h"
+#endif
 
 #include <string.h>
 #include <stdlib.h>
@@ -5410,6 +5413,9 @@ s32 func_8083B040(Player* this, PlayState* play) {
                             ((this->exchangeItemId != EXCH_ITEM_BEAN) || (this->itemAction == PLAYER_IA_MAGIC_BEAN))) {
                             if (this->exchangeItemId == EXCH_ITEM_BEAN) {
                                 Inventory_ChangeAmmo(ITEM_BEAN, -1);
+#ifdef ENABLE_REMOTE_CONTROL
+                                Anchor_UpdateBeansCount(AMMO(ITEM_BEAN));
+#endif
                                 func_80835DE4(play, this, func_8084279C, 0);
                                 this->stateFlags1 |= PLAYER_STATE1_IN_CUTSCENE;
                                 this->unk_850 = 0x50;
@@ -14184,6 +14190,12 @@ void Player_UpdateBunnyEars(Player* this) {
     } else {
         sBunnyEarKinematics.rot.z = 0;
     }
+
+    #ifdef ENABLE_REMOTE_CONTROL
+    gSaveContext.playerData.bunnyEarX = sBunnyEarKinematics.rot.x;
+    gSaveContext.playerData.bunnyEarY = sBunnyEarKinematics.rot.y;
+    gSaveContext.playerData.bunnyEarZ = sBunnyEarKinematics.rot.z;
+    #endif
 }
 
 s32 func_80850224(Player* this, PlayState* play) {

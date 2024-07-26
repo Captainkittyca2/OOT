@@ -21,6 +21,9 @@
 #include "soh/Enhancements/game-interactor/GameInteractor.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 #include "soh/Enhancements/randomizer/randomizer_grotto.h"
+#ifdef ENABLE_REMOTE_CONTROL
+#include "soh/Enhancements/game-interactor/GameInteractor_Anchor.h"
+#endif
 
 #define DO_ACTION_TEX_WIDTH() 48
 #define DO_ACTION_TEX_HEIGHT() 16
@@ -1825,15 +1828,30 @@ u8 Return_Item_Entry(GetItemEntry itemEntry, ItemID returnItem ) {
 u8 Return_Item(u8 itemID, ModIndex modId, ItemID returnItem) {
     // ITEM_SOLD_OUT doesn't have an ItemTable entry, so pass custom entry instead
     if (itemID == ITEM_SOLD_OUT) {
-        GetItemEntry gie = { ITEM_SOLD_OUT, 0, 0, 0, 0, 0, 0, 0, false, ITEM_FROM_NPC, ITEM_CATEGORY_LESSER, NULL };
+        GetItemEntry gie = { ITEM_SOLD_OUT, 0, 0, 0, 0, 0, 0, 0, 0, false, ITEM_FROM_NPC, ITEM_CATEGORY_LESSER, NULL };
         return Return_Item_Entry(gie, returnItem);
     }
-    int32_t get = GetGIID(itemID);
-    if (get == -1) {
-        modId = MOD_RANDOMIZER;
-        get = itemID;
+    // TODO: Need this upstream - Master sword doesn't have an ItemTable entry, so pass custom entry instead (This will go away with master sword shuffle)
+    if (itemID == ITEM_SWORD_MASTER) {
+        GetItemEntry gie = { ITEM_SWORD_MASTER, 0, 0, 0, 0, 0, 0, 0, 0, false, ITEM_FROM_NPC, ITEM_CATEGORY_MAJOR, NULL };
+        return Return_Item_Entry(gie, returnItem);
     }
-    return Return_Item_Entry(ItemTable_RetrieveEntry(modId, get), returnItem);
+
+    GetItemID getItemID = RetrieveGetItemIDFromItemID(itemID);
+    if (getItemID != GI_MAX) {
+        // Vanilla ItemID with an associated GetItemID
+        return Return_Item_Entry(ItemTable_RetrieveEntry(modId, getItemID), returnItem);
+    }
+
+    RandomizerGet randomizerGet = RetrieveRandomizerGetFromItemID(itemID);
+    if (randomizerGet != RG_MAX) {
+        // Vanilla ItemID with an associated RandomizerGet (These are items in extendedVanillaGetItemTable)
+        return Return_Item_Entry(ItemTable_RetrieveEntry(MOD_RANDOMIZER, randomizerGet), returnItem);
+    }
+
+    // All randomizer items should go through Randomizer_Item_Give, so this should never be reached
+    // but leaving this here just in case, as it was in the original behavior
+    return Return_Item_Entry(ItemTable_RetrieveEntry(MOD_RANDOMIZER, itemID), returnItem);
 }
 
 /**
@@ -1963,15 +1981,20 @@ u8 Item_Give(PlayState* play, u8 item) {
         return Return_Item(item, MOD_NONE, ITEM_NONE);
     } else if ((item == ITEM_KEY_BOSS) || (item == ITEM_COMPASS) || (item == ITEM_DUNGEON_MAP)) {
         gSaveContext.inventory.dungeonItems[gSaveContext.mapIndex] |= gBitFlags[item - ITEM_KEY_BOSS];
+#ifdef ENABLE_REMOTE_CONTROL
+        Anchor_GiveDungeonItem(gSaveContext.mapIndex, item);
+#endif
         return Return_Item(item, MOD_NONE, ITEM_NONE);
     } else if (item == ITEM_KEY_SMALL) {
         if (gSaveContext.inventory.dungeonKeys[gSaveContext.mapIndex] < 0) {
             gSaveContext.inventory.dungeonKeys[gSaveContext.mapIndex] = 1;
-            return Return_Item(item, MOD_NONE, ITEM_NONE);
         } else {
             gSaveContext.inventory.dungeonKeys[gSaveContext.mapIndex]++;
-            return Return_Item(item, MOD_NONE, ITEM_NONE);
         }
+#ifdef ENABLE_REMOTE_CONTROL
+        Anchor_UpdateKeyCount(gSaveContext.mapIndex, gSaveContext.inventory.dungeonKeys[gSaveContext.mapIndex]);
+#endif
+        return Return_Item(item, MOD_NONE, ITEM_NONE);
     } else if ((item == ITEM_QUIVER_30) || (item == ITEM_BOW)) {
         if (CUR_UPG_VALUE(UPG_QUIVER) == 0) {
             Inventory_ChangeUpgrade(UPG_QUIVER, 1);
@@ -2276,6 +2299,16 @@ u8 Item_Give(PlayState* play, u8 item) {
     } else if ((item == ITEM_HEART_PIECE_2) || (item == ITEM_HEART_PIECE)) {
         gSaveContext.inventory.questItems += 1 << (QUEST_HEART_PIECE + 4);
         gSaveContext.sohStats.heartPieces++;
+        if (CVarGetInteger("gFromGI", 0)) {
+            gSaveContext.healthAccumulator = 0x140;
+            s32 heartPieces = (s32)(gSaveContext.inventory.questItems & 0xF0000000) >> (QUEST_HEART_PIECE + 4);
+            if (heartPieces >= 4) {
+                gSaveContext.inventory.questItems &= ~0xF0000000;
+                gSaveContext.inventory.questItems += (heartPieces % 4) << (QUEST_HEART_PIECE + 4);
+                gSaveContext.healthCapacity += 0x10 * (heartPieces / 4);
+                gSaveContext.health += 0x10 * (heartPieces / 4);
+            }
+        }
         return Return_Item(item, MOD_NONE, ITEM_NONE);
     } else if (item == ITEM_HEART_CONTAINER) {
         gSaveContext.healthCapacity += 0x10;
@@ -6595,11 +6628,15 @@ void Interface_Update(PlayState* play) {
             gSaveContext.pendingSale = ITEM_NONE;
             gSaveContext.pendingSaleMod = MOD_NONE;
             if (tempSaleMod == MOD_NONE) {
-                s16 giid = GetGIID(tempSaleItem);
-                if (giid == -1) {
-                    tempSaleMod = MOD_RANDOMIZER;
+                GetItemID getItemID = RetrieveGetItemIDFromItemID(tempSaleItem);
+                RandomizerGet randomizerGet = RetrieveRandomizerGetFromItemID(tempSaleItem);
+                if (getItemID != GI_MAX) {
+                    tempSaleItem = getItemID;
                 } else {
-                    tempSaleItem = giid;
+                    if (randomizerGet != RG_MAX) {
+                        tempSaleItem = randomizerGet;
+                    }
+                    tempSaleMod = MOD_RANDOMIZER;
                 }
             }
             GameInteractor_ExecuteOnSaleEndHooks(ItemTable_RetrieveEntry(tempSaleMod, tempSaleItem));
